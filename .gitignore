@@ -1,0 +1,5 @@
+# Ignore large datasets
+backend/data/*.csv
+
+# Virtual environment
+venv/
