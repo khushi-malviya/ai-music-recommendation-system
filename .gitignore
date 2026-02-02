@@ -1,5 +1,5 @@
 # Ignore large datasets
-backend/data/*.csv
+backend/data/spotify_tracks.csv
 
 # Virtual environment
 venv/
