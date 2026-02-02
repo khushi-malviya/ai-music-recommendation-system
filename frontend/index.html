@@ -7,53 +7,57 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>🎵 AI Music Recommendation System</h1>
-        <p class="subtitle">Discover music using AI-powered recommendations</p>
+<div class="container">
+    <h1>🎵 AI Music Recommendation System</h1>
+    <p class="subtitle">Discover music using AI, mood & intelligence</p>
 
-        <!-- SONG BASED -->
-        <div class="card">
-            <h2>Song-Based Recommendation</h2>
-            <input 
-                type="text" 
-                id="songInput"
-                placeholder="Enter song name..." 
-            />
-            <button onclick="getSongRecommendations()">Recommend</button>
-        </div>
-
-        <!-- MOOD BASED -->
-        <div class="card">
-            <h2>Mood-Based Recommendation</h2>
-            <select id="moodSelect">
-                <option value="">Select mood</option>
-                <option value="happy">happy</option>
-                <option value="sad">sad</option>
-                <option value="energetic">energetic</option>
-                <option value="chill">chill</option>
-            </select>
-            <button onclick="getMoodRecommendations()">Recommend</button>
-        </div>
-
-        <!-- AI TEXT BASED -->
-        <div class="card">
-            <h2>AI Text-Based Recommendation</h2>
-            <input 
-                type="text" 
-                id="textQueryInput"
-                placeholder="e.g. sad hindi song, energetic workout music"
-            />
-            <button onclick="getTextRecommendations()">Recommend</button>
-        </div>
-
-        <div class="results">
-            <h2>Results</h2>
-            <div id="resultsArea">
-                <p class="placeholder">Results will appear here...</p>
-            </div>
-        </div>
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" data-tab="songTab">🎵 Song</button>
+        <button class="tab" data-tab="moodTab">🎭 Mood</button>
+        <button class="tab" data-tab="textTab">🤖 AI Text</button>
     </div>
 
-    <script src="script.js"></script>
+    <!-- SONG TAB -->
+    <div class="card tab-content active" id="songTab">
+        <h2>Song-Based Recommendation</h2>
+        <input id="songInput" type="text" placeholder="Enter song name..." />
+        <button id="songBtn">Recommend</button>
+    </div>
+
+    <!-- MOOD TAB -->
+    <div class="card tab-content" id="moodTab">
+        <h2>Mood-Based Recommendation</h2>
+        <select id="moodSelect">
+            <option value="">Select mood</option>
+            <option value="happy">happy</option>
+            <option value="sad">sad</option>
+            <option value="energetic">energetic</option>
+            <option value="chill">chill</option>
+        </select>
+        <button id="moodBtn">Recommend</button>
+    </div>
+
+    <!-- TEXT TAB -->
+    <div class="card tab-content" id="textTab">
+        <h2>AI Text-Based Recommendation</h2>
+        <input
+            id="textQueryInput"
+            type="text"
+            placeholder="e.g. sad hindi song, energetic workout music"
+        />
+        <button id="textBtn">Recommend</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results">
+        <h2>🎧 Recommendations</h2>
+        <div id="resultsArea">
+            <p class="placeholder">Your AI-powered recommendations will appear here...</p>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
