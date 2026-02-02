@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>AI Music Recommendation System</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎵 AI Music Recommendation System</h1>
+        <p class="subtitle">Discover music using AI-powered recommendations</p>
+
+        <!-- SONG BASED -->
+        <div class="card">
+            <h2>Song-Based Recommendation</h2>
+            <input 
+                type="text" 
+                id="songInput"
+                placeholder="Enter song name..." 
+            />
+            <button onclick="getSongRecommendations()">Recommend</button>
+        </div>
+
+        <!-- MOOD BASED -->
+        <div class="card">
+            <h2>Mood-Based Recommendation</h2>
+            <select id="moodSelect">
+                <option value="">Select mood</option>
+                <option value="happy">happy</option>
+                <option value="sad">sad</option>
+                <option value="energetic">energetic</option>
+                <option value="chill">chill</option>
+            </select>
+            <button onclick="getMoodRecommendations()">Recommend</button>
+        </div>
+
+        <!-- AI TEXT BASED -->
+        <div class="card">
+            <h2>AI Text-Based Recommendation</h2>
+            <input 
+                type="text" 
+                id="textQueryInput"
+                placeholder="e.g. sad hindi song, energetic workout music"
+            />
+            <button onclick="getTextRecommendations()">Recommend</button>
+        </div>
+
+        <div class="results">
+            <h2>Results</h2>
+            <div id="resultsArea">
+                <p class="placeholder">Results will appear here...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
