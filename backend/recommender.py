@@ -1,12 +1,22 @@
+import os
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import NearestNeighbors
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+import joblib
+
 
 class MusicRecommender:
-    def __init__(self, data_path):
+    def __init__(self, data_path, sample_size=20000):
         self.data = pd.read_csv(data_path)
 
-        self.features = [
+        # Use subset for development (professional practice)
+        if len(self.data) > sample_size:
+            self.data = self.data.sample(sample_size, random_state=42)
+
+        self.audio_features = [
             'danceability', 'energy', 'loudness',
             'speechiness', 'acousticness',
             'instrumentalness', 'liveness',
@@ -14,44 +24,89 @@ class MusicRecommender:
         ]
 
         self.scaler = StandardScaler()
-        self.model = None
-        self.feature_matrix = None
+        self.audio_model = None
+        self.audio_matrix = None
 
-        self._prepare_model()
+        self.text_model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.text_embeddings = None
 
-    def _prepare_model(self):
-        # Drop rows with missing values
-        self.data = self.data.dropna(subset=self.features).reset_index(drop=True)
+        self._prepare_models()
 
-        # Scale features
-        scaled_features = self.scaler.fit_transform(self.data[self.features])
-        self.feature_matrix = scaled_features
+    def _prepare_models(self):
+        self.data = self.data.dropna(subset=self.audio_features).reset_index(drop=True)
 
-        # Train KNN model
-        self.model = NearestNeighbors(
-            n_neighbors=6,
-            metric='cosine',
-            algorithm='brute'
+        # ---------- AUDIO ----------
+        self.audio_matrix = self.scaler.fit_transform(self.data[self.audio_features])
+
+        self.audio_model = NearestNeighbors(
+            n_neighbors=10,
+            metric="cosine",
+            algorithm="brute"
         )
-        self.model.fit(self.feature_matrix)
+        self.audio_model.fit(self.audio_matrix)
 
-    def recommend(self, song_name, n_recommendations=5):
-        if song_name not in self.data['name'].values:
+        # ---------- NLP (CACHED) ----------
+        cache_path = "data/text_embeddings.pkl"
+
+        if os.path.exists(cache_path):
+            self.text_embeddings = joblib.load(cache_path)
+        else:
+            corpus = (self.data["name"] + " " + self.data["artists"].astype(str)).tolist()
+            self.text_embeddings = self.text_model.encode(
+                corpus, batch_size=64, show_progress_bar=True
+            )
+            joblib.dump(self.text_embeddings, cache_path)
+
+    # ---------- SONG BASED ----------
+    def recommend_by_song(self, song_name, top_n=5):
+        if song_name not in self.data["name"].values:
             return []
 
-        idx = self.data[self.data['name'] == song_name].index[0]
-        distances, indices = self.model.kneighbors(
-            [self.feature_matrix[idx]],
-            n_neighbors=n_recommendations + 1
+        idx = self.data[self.data["name"] == song_name].index[0]
+        distances, indices = self.audio_model.kneighbors(
+            [self.audio_matrix[idx]], n_neighbors=top_n + 1
         )
 
-        recommendations = []
+        return [
+            {
+                "song": self.data.iloc[i]["name"],
+                "artist": self.data.iloc[i]["artists"],
+                "score": round(1 - dist, 3)
+            }
+            for i, dist in zip(indices[0][1:], distances[0][1:])
+        ]
 
-        for i, dist in zip(indices[0][1:], distances[0][1:]):
-            recommendations.append({
-                "song": self.data.iloc[i]['name'],
-                "artist": self.data.iloc[i]['artists'],
-                "similarity": round(1 - dist, 3)
-            })
+    # ---------- MOOD BASED ----------
+    def recommend_by_mood(self, mood, top_n=5):
+        mood_map = {
+            "happy": {"valence": (0.6, 1.0), "energy": (0.6, 1.0)},
+            "sad": {"valence": (0.0, 0.4), "energy": (0.0, 0.5)},
+            "energetic": {"energy": (0.7, 1.0)},
+            "chill": {"energy": (0.0, 0.4), "acousticness": (0.4, 1.0)}
+        }
 
-        return recommendations
+        if mood not in mood_map:
+            return []
+
+        df = self.data.copy()
+        for f, (lo, hi) in mood_map[mood].items():
+            df = df[(df[f] >= lo) & (df[f] <= hi)]
+
+        df = df.sample(min(top_n, len(df)))
+
+        return [{"song": r["name"], "artist": r["artists"], "mood": mood} for _, r in df.iterrows()]
+
+    # ---------- NLP BASED ----------
+    def recommend_by_text(self, query, top_n=5):
+        q_emb = self.text_model.encode([query])
+        scores = cosine_similarity(q_emb, self.text_embeddings)[0]
+        idxs = np.argsort(scores)[::-1][:top_n]
+
+        return [
+            {
+                "song": self.data.iloc[i]["name"],
+                "artist": self.data.iloc[i]["artists"],
+                "score": round(scores[i], 3)
+            }
+            for i in idxs
+        ]
