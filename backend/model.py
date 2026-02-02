@@ -4,7 +4,7 @@ if __name__ == "__main__":
     recommender = MusicRecommender("data/spotify_tracks.csv")
 
     print("\n--- SONG BASED ---")
-    print(recommender.recommend_by_song("Blinding Lights"))
+    print(recommender.recommend_by_song("light"))
 
     print("\n--- MOOD BASED ---")
     print(recommender.recommend_by_mood("sad"))

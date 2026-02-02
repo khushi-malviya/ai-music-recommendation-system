@@ -12,7 +12,7 @@ class MusicRecommender:
     def __init__(self, data_path, sample_size=20000):
         self.data = pd.read_csv(data_path)
 
-        # Use subset for development (professional practice)
+        # Sample for development (industry practice)
         if len(self.data) > sample_size:
             self.data = self.data.sample(sample_size, random_state=42)
 
@@ -57,12 +57,19 @@ class MusicRecommender:
             )
             joblib.dump(self.text_embeddings, cache_path)
 
-    # ---------- SONG BASED ----------
-    def recommend_by_song(self, song_name, top_n=5):
-        if song_name not in self.data["name"].values:
+    # ---------- SONG BASED (FUZZY MATCH) ----------
+    def recommend_by_song(self, song_query, top_n=5):
+        song_query = song_query.lower()
+
+        matches = self.data[
+            self.data["name"].str.lower().str.contains(song_query, na=False)
+        ]
+
+        if matches.empty:
             return []
 
-        idx = self.data[self.data["name"] == song_name].index[0]
+        idx = matches.index[0]
+
         distances, indices = self.audio_model.kneighbors(
             [self.audio_matrix[idx]], n_neighbors=top_n + 1
         )
@@ -71,7 +78,7 @@ class MusicRecommender:
             {
                 "song": self.data.iloc[i]["name"],
                 "artist": self.data.iloc[i]["artists"],
-                "score": round(1 - dist, 3)
+                "score": round(float(1 - dist), 3)
             }
             for i, dist in zip(indices[0][1:], distances[0][1:])
         ]
@@ -94,7 +101,10 @@ class MusicRecommender:
 
         df = df.sample(min(top_n, len(df)))
 
-        return [{"song": r["name"], "artist": r["artists"], "mood": mood} for _, r in df.iterrows()]
+        return [
+            {"song": r["name"], "artist": r["artists"], "mood": mood}
+            for _, r in df.iterrows()
+        ]
 
     # ---------- NLP BASED ----------
     def recommend_by_text(self, query, top_n=5):
@@ -106,7 +116,7 @@ class MusicRecommender:
             {
                 "song": self.data.iloc[i]["name"],
                 "artist": self.data.iloc[i]["artists"],
-                "score": round(scores[i], 3)
+                "score": round(float(scores[i]), 3)
             }
             for i in idxs
         ]
