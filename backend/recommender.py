@@ -9,7 +9,7 @@ import joblib
 
 
 class MusicRecommender:
-    def __init__(self, data_path, sample_size=20000):
+    def __init__(self, data_path, sample_size=30000):
         self.data = pd.read_csv(data_path)
 
         # Sample for development (industry practice)
